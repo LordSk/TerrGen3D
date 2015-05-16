@@ -13,7 +13,9 @@ void App::terminate()
 App::App(int width, int height)
     : _width(width),
       _height(height),
-      _window(nullptr)
+      _window(nullptr),
+      _camX(0.f),
+      _camY(0.f)
 {
 
 }
@@ -40,6 +42,9 @@ bool App::init()
 
     // Make the window's context current
     glfwMakeContextCurrent(_window);
+
+    //keyboard
+    glfwSetKeyCallback(_window, keyCallback);
 
     // bgfx
     int debug = BGFX_DEBUG_TEXT;
@@ -68,8 +73,8 @@ void App::run()
         bgfx::dbgTextPrintf(0, 2, 0x6f, "Description: Rendering simple static mesh.");*/
 
         // view
-        float at[3]  = { 0.0f, 0.0f,   0.0f };
-        float eye[3] = { 0.0f, 0.0f, -35.0f };
+        float at[3]  = { _camX, _camY, 0.0f };
+        float eye[3] = { _camX, _camY, -35.0f };
 
         float view[16];
         bx::mtxLookAt(view, eye, at);
@@ -102,3 +107,37 @@ void App::run()
     }
 }
 
+void App::keyPress(int key)
+{
+    if(key == GLFW_KEY_W)
+        _camY += 5.f;
+    if(key == GLFW_KEY_S)
+        _camY -= 5.f;
+    if(key == GLFW_KEY_A)
+        _camX -= 5.f;
+    if(key == GLFW_KEY_D)
+        _camX += 5.f;
+}
+
+namespace global {
+
+App* g_app;
+
+void setApp(App *app)
+{
+    g_app = app;
+}
+
+App* app()
+{
+    return g_app;
+}
+
+}
+
+
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if(action == GLFW_RELEASE)
+        global::app()->keyPress(key);
+}

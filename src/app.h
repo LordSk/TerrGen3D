@@ -8,6 +8,8 @@ class App
     int _height;
     class GLFWwindow* _window;
     Terrain _terrain;
+    float _camX;
+    float _camY;
 
     void terminate();
 
@@ -17,4 +19,14 @@ public:
 
     bool init();
     void run();
+    void keyPress(int key);
 };
+
+namespace global {
+
+void setApp(App* app);
+App* app();
+
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

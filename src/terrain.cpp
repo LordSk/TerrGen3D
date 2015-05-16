@@ -55,6 +55,33 @@ bool Terrain::loadMat()
 
 void Terrain::generate()
 {
+    // generate vertices
+    float chunkSize = 1024.f;
+    int subDivs = 128;
+    float squareSize = chunkSize / (float)subDivs;
+
+    _vertices.clear();
+    _vertices.reserve(subDivs*subDivs);
+    _indices.clear();
+    _indices.reserve(subDivs*subDivs*6);
+    int v = 0; // _vertices size
+    for(int i = 0; i < subDivs; i++) {
+        for(int j = 0; j < subDivs; j++) {
+            float x = (float)i * squareSize;
+            float y = (float)j * squareSize;
+            float z = 0.f;
+
+            _vertices.push_back({ x, y, z, 0xff000000 });
+            _vertices.push_back({ x + squareSize, y, z, 0xff00ff00 });
+            _vertices.push_back({ x + squareSize, y + squareSize, z, 0xff00ffff });
+            _vertices.push_back({ x, y + squareSize, z, 0xff0000ff });
+            _indices.push_back(v);_indices.push_back(v+1);_indices.push_back(v+3);
+            _indices.push_back(v+1);_indices.push_back(v+2);_indices.push_back(v+4);
+            v += 4;
+        }
+    }
+
+    // assign buffers
     _vertBuff = bgfx::createVertexBuffer(
         bgfx::makeRef(_vertices.data(), _vertices.size()*sizeof(PosColorVertex))
         , _vertexDecl);

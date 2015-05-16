@@ -7,6 +7,7 @@ int main()
     int height = 900;
 
     App* app = new App(width, height);
+    global::setApp(app);
     std::cout << "app::init() " << app->init() << std::endl;
     app->run();
 
