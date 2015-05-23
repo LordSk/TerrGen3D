@@ -1,2 +1,2 @@
 # TerrGen3D
-Nothing to see here for now.
+![screenshot1](http://i.imgur.com/uFEAmLw.png)

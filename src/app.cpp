@@ -68,13 +68,13 @@ void App::run()
 {
     while(!glfwWindowShouldClose(_window))
     {
-        bgfx::dbgTextClear();
+        /*bgfx::dbgTextClear();
         bgfx::dbgTextPrintf(0, 1, 0x4f, "bgfx/examples/01-cube");
-        bgfx::dbgTextPrintf(0, 2, 0x6f, "Description: Rendering simple static mesh.");
+        bgfx::dbgTextPrintf(0, 2, 0x6f, "Description: Rendering simple static mesh.");*/
 
         // view
-        float at[3]  = { 0, 0, 0.0f };
-        float eye[3] = { _camX, _camY, -35.0f };
+        float at[3]  = { _camX, _camY, 0.0f };
+        float eye[3] = { 0.f, 0.f, -35.0f };
 
         float view[16];
         bx::mtxLookAt(view, eye, at);
