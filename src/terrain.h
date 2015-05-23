@@ -2,6 +2,7 @@
 
 #include <bgfx.h>
 #include <vector>
+#include <noise/noise.h>
 
 class Terrain
 {
@@ -21,6 +22,21 @@ class Terrain
     std::vector<PosColorVertex> _vertices;
     std::vector<uint16_t> _indices;
 
+    noise::module::Perlin _noise;
+    noise::module::RidgedMulti _mountain;
+    noise::module::Billow _baseFlat;
+    noise::module::ScaleBias _flat;
+    noise::module::Select _select;
+    noise::module::Turbulence _turb;
+
+    int32_t _seed;
+    float _chunkSize;
+    float _zScale;
+    float _xyScale;
+    float _subDivisions;
+    //const int _maxRadius;
+
+    float getZ(float x, float y);
 
 public:
 

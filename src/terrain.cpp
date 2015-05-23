@@ -2,6 +2,11 @@
 #include "utils.h"
 #include "terrain.h"
 
+float Terrain::getZ(float x, float y)
+{
+    return _turb.GetValue(x / _xyScale, y / _xyScale, 0.1) * _zScale;
+}
+
 Terrain::Terrain():
     _program(BGFX_INVALID_HANDLE),
     _vertBuff(BGFX_INVALID_HANDLE),
@@ -38,6 +43,35 @@ Terrain::Terrain():
         2, 3, 6, // 10
         6, 3, 7,
     };
+
+    _seed = 123456789;
+
+    _noise.SetSeed(_seed);
+    _baseFlat.SetSeed(_seed);
+    _mountain.SetSeed(_seed);
+
+    _baseFlat.SetFrequency(2.0);
+    _flat.SetSourceModule(0, _baseFlat);
+    _flat.SetScale(0.125);
+    _flat.SetBias(-0.75);
+
+    _noise.SetFrequency(0.5);
+    _noise.SetPersistence(0.25);
+
+    _select.SetSourceModule(0, _flat);
+    _select.SetSourceModule(1, _mountain);
+    _select.SetControlModule(_noise);
+    _select.SetBounds(0, 1000);
+    _select.SetEdgeFalloff(0.125);
+
+    _turb.SetSourceModule(0, _select);
+    _turb.SetFrequency(4.0);
+    _turb.SetPower(0.125);
+
+    _chunkSize = 512.f;
+    _subDivisions = 128;
+    _zScale = 10.f;
+    _xyScale = 100.f;
 }
 
 Terrain::~Terrain()
@@ -56,27 +90,31 @@ bool Terrain::loadMat()
 void Terrain::generate()
 {
     // generate vertices
-    float chunkSize = 1024.f;
-    int subDivs = 128;
-    float squareSize = chunkSize / (float)subDivs;
+    float squareSize = _chunkSize / (float)_subDivisions;
 
     _vertices.clear();
-    _vertices.reserve(subDivs*subDivs);
+    _vertices.reserve(_subDivisions*_subDivisions);
     _indices.clear();
-    _indices.reserve(subDivs*subDivs*6);
+    _indices.reserve(_subDivisions*_subDivisions*6);
     int v = 0; // _vertices size
-    for(int i = 0; i < subDivs; i++) {
-        for(int j = 0; j < subDivs; j++) {
+
+    for(int i = 0; i < _subDivisions; i++) {
+        for(int j = 0; j < _subDivisions; j++) {
             float x = (float)i * squareSize;
             float y = (float)j * squareSize;
-            float z = 0.f;
+            float z1 = getZ(x , y);
+            float z2 = getZ(x + squareSize, y);
+            float z3 = getZ(x, y + squareSize);
+            float z4 = getZ(x + squareSize, y + squareSize);
 
-            _vertices.push_back({ x, y, z, 0xff000000 });
-            _vertices.push_back({ x + squareSize, y, z, 0xff00ff00 });
-            _vertices.push_back({ x + squareSize, y + squareSize, z, 0xff00ffff });
-            _vertices.push_back({ x, y + squareSize, z, 0xff0000ff });
+            _vertices.push_back({ x, y, z1, 0xff000000 });
+            _vertices.push_back({ x + squareSize, y, z2, 0xff00ff00 });
+            _vertices.push_back({ x + squareSize, y + squareSize, z4, 0xff00ffff });
+            _vertices.push_back({ x, y + squareSize, z3, 0xff0000ff });
+
             _indices.push_back(v);_indices.push_back(v+1);_indices.push_back(v+3);
-            _indices.push_back(v+1);_indices.push_back(v+2);_indices.push_back(v+4);
+            _indices.push_back(v+1);_indices.push_back(v+2);_indices.push_back(v+3);
+
             v += 4;
         }
     }

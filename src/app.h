@@ -19,7 +19,7 @@ public:
 
     bool init();
     void run();
-    void keyPress(int key);
+    void keyRelease(int key);
 };
 
 namespace global {
