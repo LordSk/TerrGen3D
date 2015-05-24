@@ -15,7 +15,9 @@ class Terrain
         float x;
         float y;
         float z;
-        uint32_t abgr;
+        float nx;
+        float ny;
+        float nz;
     };
 
     bgfx::VertexDecl _vertexDecl;

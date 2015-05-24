@@ -11,6 +11,9 @@ class App
     float _camX;
     float _camY;
 
+    bgfx::UniformHandle _uLightDir;
+    float _lightDir[3];
+
     void terminate();
 
 public:

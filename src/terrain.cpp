@@ -1,6 +1,9 @@
 #include <iostream>
+#include <bx/fpumath.h>
 #include "utils.h"
 #include "terrain.h"
+#include <cstdlib>
+#include <ctime>
 
 float Terrain::getZ(float x, float y)
 {
@@ -15,34 +18,8 @@ Terrain::Terrain():
     _vertexDecl
         .begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0,   4, bgfx::AttribType::Uint8, true)
+        .add(bgfx::Attrib::Normal,   3, bgfx::AttribType::Float)
         .end();
-
-    _vertices = {
-        {-1.0f,  1.0f,  1.0f, 0xff000000 },
-        { 1.0f,  1.0f,  1.0f, 0xff0000ff },
-        {-1.0f, -1.0f,  1.0f, 0xff00ff00 },
-        { 1.0f, -1.0f,  1.0f, 0xff00ffff },
-        {-1.0f,  1.0f, -1.0f, 0xffff0000 },
-        { 1.0f,  1.0f, -1.0f, 0xffff00ff },
-        {-1.0f, -1.0f, -1.0f, 0xffffff00 },
-        { 1.0f, -1.0f, -1.0f, 0xffffffff },
-    };
-
-    _indices = {
-        0, 1, 2, // 0
-        1, 3, 2,
-        4, 6, 5, // 2
-        5, 6, 7,
-        0, 2, 4, // 4
-        4, 2, 6,
-        1, 5, 3, // 6
-        5, 7, 3,
-        0, 4, 1, // 8
-        4, 5, 1,
-        2, 3, 6, // 10
-        6, 3, 7,
-    };
 
     _seed = 123456789;
 
@@ -72,6 +49,8 @@ Terrain::Terrain():
     _subDivisions = 128;
     _zScale = 10.f;
     _xyScale = 100.f;
+
+    srand(time(nullptr));
 }
 
 Terrain::~Terrain()
@@ -83,7 +62,7 @@ Terrain::~Terrain()
 
 bool Terrain::loadMat()
 {
-    _program = utils::loadProgram("vs_cubes", "fs_cubes");
+    _program = utils::loadProgram("vs_terrain", "fs_terrain");
     return bgfx::isValid(_program);
 }
 
@@ -91,31 +70,46 @@ void Terrain::generate()
 {
     // generate vertices
     float squareSize = _chunkSize / (float)_subDivisions;
+    int width = _subDivisions;
 
     _vertices.clear();
-    _vertices.reserve(_subDivisions*_subDivisions);
+    _vertices.reserve(width*width);
     _indices.clear();
-    _indices.reserve(_subDivisions*_subDivisions*6);
-    int v = 0; // _vertices size
+    _indices.reserve(width*width*6);
 
-    for(int i = 0; i < _subDivisions; i++) {
-        for(int j = 0; j < _subDivisions; j++) {
-            float x = (float)i * squareSize;
-            float y = (float)j * squareSize;
-            float z1 = getZ(x , y);
-            float z2 = getZ(x + squareSize, y);
-            float z3 = getZ(x, y + squareSize);
-            float z4 = getZ(x + squareSize, y + squareSize);
+    // vertices
+    for(int xx = 0; xx < width; xx++) {
+        for(int yy = 0; yy < width; yy++) {
+            float x = (float)xx * squareSize;
+            float y = (float)yy * squareSize;
+            float z = getZ(x , y);
 
-            _vertices.push_back({ x, y, z1, 0xff000000 });
-            _vertices.push_back({ x + squareSize, y, z2, 0xff00ff00 });
-            _vertices.push_back({ x + squareSize, y + squareSize, z4, 0xff00ffff });
-            _vertices.push_back({ x, y + squareSize, z3, 0xff0000ff });
+            _vertices.push_back({ x, y, z, 0, 0, 0 });
+        }
+    }
 
-            _indices.push_back(v);_indices.push_back(v+1);_indices.push_back(v+3);
-            _indices.push_back(v+1);_indices.push_back(v+2);_indices.push_back(v+3);
+    // indices
+    for(int x = 0; x < width-1; x++) {
+        for(int y = 0; y < width-1; y++) {
+            int bl = x + width*y;
+            int br = bl + 1;
+            int tl = x + width*(y+1);
+            int tr = tl + 1;
+            _indices.push_back(bl);_indices.push_back(tl);_indices.push_back(tr);
+            _indices.push_back(bl);_indices.push_back(tr);_indices.push_back(br);
 
-            v += 4;
+            // normals
+            auto& vertBl = _vertices[bl];
+            const auto& vertTl = _vertices[tl];
+            const auto& vertBr = _vertices[br];
+            float norm[3];
+            float v1[3] = { vertTl.x-vertBl.x, vertTl.y-vertBl.y, vertTl.z-vertBl.z};
+            float v2[3] = { vertBr.x-vertBl.x, vertBr.y-vertBl.y, vertBr.z-vertBl.z};
+            bx::vec3Cross(norm, v1, v2);
+
+            vertBl.nx = norm[0];
+            vertBl.ny = norm[1];
+            vertBl.nz = norm[2];
         }
     }
 

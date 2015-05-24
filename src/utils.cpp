@@ -7,13 +7,13 @@ const bgfx::Memory* loadMem(const char *filePath)
 {
     std::ifstream file(filePath, std::ios::binary | std::ios::ate); // start at the end to read size (ios::ate)
     if(file) {
-    std::streampos size = file.tellg();
-    const bgfx::Memory* mem = bgfx::alloc((uint32_t)size+1);
-    file.seekg(0, std::ios::beg);
-    file.read(reinterpret_cast<char*>(mem->data), size);
-    file.close();
-    mem->data[mem->size-1] = '\0';
-    return mem;
+        std::streampos size = file.tellg();
+        const bgfx::Memory* mem = bgfx::alloc((uint32_t)size+1);
+        file.seekg(0, std::ios::beg);
+        file.read(reinterpret_cast<char*>(mem->data), size);
+        file.close();
+        mem->data[mem->size-1] = '\0';
+        return mem;
     }
 
     std::cout << "[ERROR] couldn't open " << filePath << std::endl;
@@ -26,7 +26,7 @@ bgfx::ProgramHandle loadProgram(const std::string &vsName, const std::string &fs
     auto fMem = loadMem(("shaders/" + fsName + ".bin").c_str());
 
     if(!vMem || !fMem) {
-    return BGFX_INVALID_HANDLE;
+        return BGFX_INVALID_HANDLE;
     }
 
     bgfx::ShaderHandle vsh = bgfx::createShader(vMem);

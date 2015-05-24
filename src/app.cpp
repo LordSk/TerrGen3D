@@ -57,10 +57,17 @@ bool App::init()
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH
                , 0x303030ff, 1.0f, 0);
 
+
+    _uLightDir  = bgfx::createUniform("u_lightDir",  bgfx::UniformType::Uniform1fv);
+
     if(!_terrain.loadMat())
         return false;
 
     _terrain.generate();
+
+    _lightDir[0] = 0.5f; _lightDir[1] = 0.5f; _lightDir[2] = 0.5f;
+    bgfx::setUniform(_uLightDir, _lightDir);
+
     return true;
 }
 
@@ -73,14 +80,16 @@ void App::run()
         bgfx::dbgTextPrintf(0, 2, 0x6f, "Description: Rendering simple static mesh.");*/
 
         // view
-        float at[3]  = { _camX, _camY, 0.0f };
-        float eye[3] = { 0.f, 0.f, -35.0f };
+        constexpr float offsetX = 100.f;
+        constexpr float offsetY = 40.f;
+        float at[3]  = { offsetX+_camX, offsetY+_camY, 0.0f };
+        float eye[3] = { offsetX, 0.f, -35.0f };
 
         float view[16];
         bx::mtxLookAt(view, eye, at);
 
         float proj[16];
-        bx::mtxProj(proj, 60.0f, float(_width)/float(_height), 0.1f, 10000.0f);
+        bx::mtxProj(proj, 90.0f, float(_width)/float(_height), 0.1f, 10000.0f);
         bgfx::setViewTransform(0, view, proj);
 
 
@@ -116,6 +125,26 @@ void App::keyRelease(int key)
         _camX -= 5.f;
     if(key == GLFW_KEY_D)
         _camX += 5.f;
+
+    if(key == GLFW_KEY_KP_1) {
+        _lightDir[0] += 0.5f;
+        bgfx::setUniform(_uLightDir, _lightDir);
+    }
+
+    if(key == GLFW_KEY_KP_4) {
+        _lightDir[0] -= 0.5f;
+        bgfx::setUniform(_uLightDir, _lightDir);
+    }
+
+    if(key == GLFW_KEY_KP_2) {
+        _lightDir[1] += 0.5f;
+        bgfx::setUniform(_uLightDir, _lightDir);
+    }
+
+    if(key == GLFW_KEY_KP_5) {
+        _lightDir[1] -= 0.5f;
+        bgfx::setUniform(_uLightDir, _lightDir);
+    }
 }
 
 namespace global {
